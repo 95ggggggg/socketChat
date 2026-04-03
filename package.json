@@ -1,0 +1,10 @@
+{
+  "name": "socket-chat-frontend",
+  "private": true,
+  "scripts": {
+    "build:frontend": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}

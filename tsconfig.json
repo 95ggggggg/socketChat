@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2021",
+    "module": "ES2022",
+    "lib": ["DOM", "ES2021"],
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "outDir": "src/main/resources/static/js-ts",
+    "skipLibCheck": true
+  },
+  "include": [
+    "src/main/frontend/**/*.ts"
+  ]
+}

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket Chat</title>
+    <link rel="stylesheet" href="/css/chat.css">
+</head>
+<body>
+<main class="app-shell">
+    <section class="panel sidebar-panel">
+        <div class="hero-panel">
+            <p class="eyebrow">Spring WebSocket + TypeScript</p>
+            <h1>실시간 채팅 워크스페이스</h1>
+            <p class="description">
+                JWT 로그인, 사용자별 방 접근 권한, 실시간 메시지 흐름까지 포함한 인증형 채팅 프레임워크입니다.
+            </p>
+        </div>
+
+        <section class="auth-panel">
+            <div class="room-list-header">
+                <h2>계정</h2>
+                <span id="auth-status" class="status disconnected">로그아웃</span>
+            </div>
+
+            <form id="register-form" class="auth-form">
+                <label>
+                    <span>사용자명</span>
+                    <input id="register-username" type="text" placeholder="새 계정" required>
+                </label>
+                <label>
+                    <span>이메일</span>
+                    <input id="register-email" type="email" placeholder="name@example.com" required>
+                </label>
+                <label>
+                    <span>비밀번호</span>
+                    <input id="register-password" type="password" placeholder="8자 이상" required>
+                </label>
+                <button type="submit">회원가입</button>
+            </form>
+
+            <form id="login-form" class="auth-form">
+                <label>
+                    <span>사용자명</span>
+                    <input id="login-username" type="text" placeholder="기존 계정" required>
+                </label>
+                <label>
+                    <span>비밀번호</span>
+                    <input id="login-password" type="password" placeholder="비밀번호" required>
+                </label>
+                <button type="submit">로그인</button>
+            </form>
+
+            <div class="session-box">
+                <p id="current-user-label">현재 사용자: 없음</p>
+                <button id="logout-button" type="button" class="ghost-button">로그아웃</button>
+            </div>
+        </section>
+
+        <section id="admin-user-panel" class="admin-panel hidden">
+            <div class="room-list-header">
+                <h3>관리자 사용자 관리</h3>
+                <button id="refresh-users" type="button" class="ghost-button">새로고침</button>
+            </div>
+            <form id="admin-user-form" class="admin-user-form">
+                <label>
+                    <span>사용자</span>
+                    <select id="admin-user-select"></select>
+                </label>
+                <label>
+                    <span>권한</span>
+                    <select id="admin-user-role">
+                        <option value="ROLE_USER">일반 사용자</option>
+                        <option value="ROLE_ADMIN">관리자</option>
+                    </select>
+                </label>
+                <label>
+                    <span>상태</span>
+                    <select id="admin-user-active">
+                        <option value="true">활성</option>
+                        <option value="false">비활성</option>
+                    </select>
+                </label>
+                <button type="submit">사용자 반영</button>
+            </form>
+            <ul id="admin-user-list" class="member-list"></ul>
+        </section>
+
+        <form id="room-form" class="room-form">
+            <label>
+                <span>새 채팅방 이름</span>
+                <input id="new-room-name" name="newRoomName" type="text" placeholder="예: backend-team" required>
+            </label>
+            <label>
+                <span>권한</span>
+                <select id="new-room-access" name="newRoomAccess">
+                    <option value="MEMBERS_ONLY">멤버 전용</option>
+                    <option value="PUBLIC">공개</option>
+                </select>
+            </label>
+            <button type="submit">채팅방 추가</button>
+        </form>
+
+        <section class="room-list-panel">
+            <div class="room-list-header">
+                <h2>채팅방</h2>
+                <button id="refresh-rooms" type="button" class="ghost-button">새로고침</button>
+            </div>
+            <ul id="room-list" class="room-list" aria-live="polite"></ul>
+        </section>
+    </section>
+
+    <section class="panel chat-panel">
+        <div class="chat-header">
+            <div>
+                <p class="chat-room-label">현재 채팅방</p>
+                <h2 id="active-room-name">선택되지 않음</h2>
+                <p id="room-unread-status" class="chat-room-label">읽지 않은 메시지: 0</p>
+            </div>
+            <div class="room-meta">
+                <span id="connection-status" class="status disconnected">연결 대기</span>
+                <span id="room-topic">topic: -</span>
+            </div>
+        </div>
+
+        <div class="room-actions">
+            <button id="join-room-button" type="button" class="ghost-button">채팅방 가입</button>
+        </div>
+
+        <section id="admin-room-panel" class="admin-panel hidden">
+            <div class="room-list-header">
+                <h3>관리자 방 관리</h3>
+                <span id="admin-room-status">선택된 방 없음</span>
+            </div>
+            <form id="admin-room-form" class="admin-room-form">
+                <label>
+                    <span>방 이름</span>
+                    <input id="admin-room-name" type="text" placeholder="방 이름 수정">
+                </label>
+                <label>
+                    <span>권한</span>
+                    <select id="admin-room-access">
+                        <option value="MEMBERS_ONLY">멤버 전용</option>
+                        <option value="PUBLIC">공개</option>
+                    </select>
+                </label>
+                <button type="submit">방 정보 수정</button>
+                <button id="delete-room-button" type="button">방 삭제</button>
+            </form>
+            <ul id="admin-room-members" class="member-list"></ul>
+        </section>
+
+        <form id="connect-form" class="connect-form">
+            <label>
+                <span>로그인 사용자</span>
+                <input id="sender" name="sender" type="text" placeholder="로그인 필요" readonly required>
+            </label>
+            <label>
+                <span>선택한 채팅방 ID</span>
+                <input id="roomId" name="roomId" type="text" placeholder="왼쪽 목록에서 선택" readonly required>
+            </label>
+            <button type="submit">입장</button>
+        </form>
+
+        <ul id="messages" class="message-list" aria-live="polite"></ul>
+
+        <form id="message-form" class="message-form">
+            <input id="message" name="message" type="text" placeholder="메시지를 입력하세요" disabled required>
+            <button type="submit" disabled>전송</button>
+        </form>
+    </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+<script type="module" src="/js-ts/chat.js"></script>
+</body>
+</html>
